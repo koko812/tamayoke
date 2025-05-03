@@ -1,5 +1,5 @@
 const width = 300
-const height = 300
+const height = 450
 
 const heroSize = 30
 let heroX = width / 2
