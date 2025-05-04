@@ -1,10 +1,72 @@
 const width = 300
 const height = 450
+let container = null
 
 const heroSize = 30
 let heroX = width / 2
 let heroY = height / 2
 let heroElement = null
+
+// 弾丸の生成，描写
+// 弾丸のリストを先に作っておく
+// 後からぐるぐる更新していくと思う
+const bulletSize = 10
+let bulletFromX = width / 2
+let bulletFromY = 10
+let bulletList = []
+
+// なんか関数型言語っぽくてくさ
+// なぜかこれを中括弧で括るのはダメらしい（duration の後ろの new Promise を括るのがダメ
+// 多分理由は深遠すぎて今の僕には理解できない
+const sleep = (duration) =>  new Promise(r => setTimeout(r, duration)) 
+
+// 後からどんどん作っていくものは，こんな感じに関数かしておく
+// Hero とか container は作るのは最初だけなので必要ない
+// もし残機などの概念が存在するならば，hero とかも create したほうがいいかも？
+// (というか，charactor クラスを作って毎回そこから生成するようにしたらいいんじゃないかと思うが)
+// (で，その方式でやってるのが reactor ゲーム，ただ，脳死で毎回 charactor クラスを作るべきなのかはよくわからん)
+const createBullet = (dx, dy) => {
+    element = document.createElement('div')
+    container.appendChild(element)
+    element.style.position = 'absolute'
+    element.style.width = `${bulletSize}px`
+    element.style.height = `${bulletSize}px`
+    // この radius の指定方法がよくわからん，50% ならば半円？って感じもしなくもない
+    // top left はどうせ後から update するので書く必要はないとのこと
+    element.style.backgroundColor = '#fff'
+    element.style.borderRadius = '50%'
+    bulletList.push({ x: bulletFromX, y: bulletFromY, dx, dy, element })
+    // borderRadius 以外は自分でかいた, appendChild も忘れていた
+    // ここからは，Bullet を生成すればいいんだけど，何をすればいいのか
+    // 普通に sleep すればいいのか？？
+    // sleep はとりあえず簡単だが，while 文とか書いてたっけな？？
+    // update とかいう当たり前の処理を書いていた
+}
+
+// 画面中で絶えず生成されて動くオブジェクト群には，create と update が必要だということを覚えておこう
+// オブジェクトかしておくと，この辺りを物体の種類ごとに更新関数などを書く必要がないのかもしれない
+// 継承なりして，それぞれの動きを変えるなんてことはあると思うんだけど，オブジェクト指向じゃ限界があるなんて話もあるのか？？
+// ゲームならば，オブジェクト指向が一番マッチしているような気もしなくもないんだけど
+const updateBullet = () => {
+    for (const bullet of bulletList) {
+        console.log(bullet, bullet.element);
+        // これは最初に出してしまうのがいいのか，ただそれをすると元のオブジェクトが書き変わらないんじゃないかという心配がある
+        // これは atcoder をやってる時にも不安になる，だからポインタや参照の仕組みをもうちょっとかっちり理解した方がいい気がする
+        // linux のしくみの本で，ある程度 os の動きを探るようなプログラムを書けば勉強になると思うのでやってみよう
+        // ここの top, left が謎に反映されなくてなぞ，マジでなんで？
+        // style が抜けててアホ，というか，辞書は普通に展開して取り出していた
+        // 辞書の展開取り出しは，中括弧でやれば良い模様
+        bullet.element.style.top = `${bullet.y}px`
+        bullet.element.style.left = `${bullet.x}px`
+        bullet.x += bullet.dx
+        bullet.y += bullet.dy
+        // bullet を消す処理は後でいいだろうか？そんな難しくもないか
+        // remove メソッドを書く必要があるよな
+        // 前回はオブジェクト指向だったので簡単だったけど，今回は多少めんどくさいかもしれない
+    }
+}
+
+
 
 const updateHero = () => {
     heroElement.style.top = `${heroY}px`
@@ -13,7 +75,7 @@ const updateHero = () => {
 
 const init = () => {
     console.log(heroX, heroY);
-    const container = document.createElement('div')
+    container = document.createElement('div')
     container.style.position = 'absolute'
     container.style.width = `${width}px`
     container.style.height = `${height}px`
@@ -93,6 +155,11 @@ const init = () => {
     // とはいえ，pointer up とかをつけたら，ドラッグ操作になるので，それも面倒
 }
 
-window.onload = () => {
+window.onload = async () => {
     init()
+    createBullet(0, 5)
+    for (let i = 0; i < 1000; i++) {
+        updateBullet()
+        await sleep(16)
+    }
 }
