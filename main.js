@@ -35,7 +35,7 @@ const createBullet = (dx, dy) => {
     // top left はどうせ後から update するので書く必要はないとのこと
     element.style.backgroundColor = '#fff'
     element.style.borderRadius = '50%'
-    bulletList.push({ x: bulletFromX, y: bulletFromY, dx, dy, element })
+    bulletList.push({ x: bulletFromX, y: bulletFromY, dx, dy, element, availlable:true })
     // borderRadius 以外は自分でかいた, appendChild も忘れていた
     // ここからは，Bullet を生成すればいいんだけど，何をすればいいのか
     // 普通に sleep すればいいのか？？
@@ -63,8 +63,32 @@ const updateBullet = () => {
         // bullet を消す処理は後でいいだろうか？そんな難しくもないか
         // remove メソッドを書く必要があるよな
         // 前回はオブジェクト指向だったので簡単だったけど，今回は多少めんどくさいかもしれない
+        // 当たり判定をどこに書いているかを忘れてしまった
+        // とりあえず，画面から消えてるか消えていないかのしょりだな
+        if (bullet.x < 0 || bullet.x > width || bullet.y < 0 || bullet.y > width){
+            bullet.availlable = false
+            bullet.element.remove()
+        }
+    }
+    // これだけでは，element が消えない？？
+    // そらそうか，element 自体は消してないもんな
+    // ただそれも入れると，ループの回数が倍増するような気がするんだが？？
+    bulletList = bulletList.filter((v) => v.availlable);
+}
+
+
+// これはループ数が無駄に増えるので却下ということで
+// ループの途中で球を消すとややこしいことになるので，マークをつけておくということにしている
+// あとはゲームオーバーのしょりだな
+/*
+const removeBullet = () => {
+    for (const bullet of bulletList) {
+        if(!bullet.availlable){
+            bullet.element.remove()
+        }
     }
 }
+*/
 
 
 
