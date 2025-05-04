@@ -62,8 +62,8 @@ const updateBullet = () => {
         // ここの top, left が謎に反映されなくてなぞ，マジでなんで？
         // style が抜けててアホ，というか，辞書は普通に展開して取り出していた
         // 辞書の展開取り出しは，中括弧でやれば良い模様
-        bullet.element.style.top = `${bullet.y}px`
-        bullet.element.style.left = `${bullet.x}px`
+        bullet.element.style.top = `${bullet.y-bulletSize/2}px`
+        bullet.element.style.left = `${bullet.x-bulletSize/2}px`
         bullet.x += bullet.dx
         bullet.y += bullet.dy
         // bullet を消す処理は後でいいだろうか？そんな難しくもないか
@@ -76,7 +76,7 @@ const updateBullet = () => {
             bullet.element.remove()
         }
 
-        if ((bullet.x - heroX)**2 + (bullet.y - heroY)**2 < heroSize){
+        if ((bullet.x - heroX)**2 + (bullet.y - heroY)**2 < (bulletSize)**2){
             gameOver = true
         }
     }
@@ -103,8 +103,8 @@ const removeBullet = () => {
 
 
 const updateHero = () => {
-    heroElement.style.top = `${heroY}px`
-    heroElement.style.left = `${heroX}px`
+    heroElement.style.top = `${heroY-heroSize/2}px`
+    heroElement.style.left = `${heroX-heroSize/2}px`
 }
 
 const init = () => {
@@ -161,6 +161,9 @@ const init = () => {
     // いつか，コントローラーで操作できるようになどしてみたい気分
     document.onpointermove = (e) => {
         e.preventDefault()
+        if (gameOver){
+            originalX = -1
+        }
         if (originalX !== -1) {
             heroX = originalHeroX + (e.pageX - originalX) * 1.5
             heroY = originalHeroY + (e.pageY - originalY) * 1.5
