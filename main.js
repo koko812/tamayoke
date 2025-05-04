@@ -4,7 +4,7 @@ let container = null
 
 const heroSize = 30
 let heroX = width / 2
-let heroY = height / 2
+let heroY = height / 5 * 4
 let heroElement = null
 
 // 弾丸の生成，描写
@@ -14,13 +14,71 @@ const bulletSize = 10
 let bulletFromX = width / 2
 let bulletFromY = 10
 let bulletList = []
+let bulletSpeed = 5
 
+let gameStart = false
 let gameOver = false
 
+const bulletManager = async () => {
+    //await danmaku2()
+    //await sleep(1000)
+    //await danmaku1()
+    //await sleep(1000)
+    await danmaku3()
+    await sleep(1000)
+    danmaku1()
+    await danmaku2()
+    await sleep(1000)
+    danmaku1()
+    danmaku2()
+    await danmaku3()
+}
+
+const danmaku1 = async () => {
+    for (let i = 0; i < 20; i++) {
+        for (let j = 0; j < 16; j++) {
+            const angle = Math.atan2(heroY - bulletFromY, heroX - bulletFromX)
+            // ここの dx, dy の計算式が普通にわからなかった
+            const dx = Math.cos(angle + j * Math.PI / 8) * bulletSpeed
+            const dy = Math.sin(angle + j * Math.PI / 8) * bulletSpeed
+            createBullet(dx, dy)
+        }
+        await sleep(250)
+    }
+}
+
+
+const danmaku2 = async () => {
+    for (let i = 0; i < 20; i++) {
+        for (let j = 0; j < 16; j++) {
+            const angle = i * Math.PI / 10
+            // ここの dx, dy の計算式が普通にわからなかった
+            const dx = Math.cos(angle + j * Math.PI / 8) * bulletSpeed
+            const dy = Math.sin(angle + j * Math.PI / 8) * bulletSpeed
+            createBullet(dx, dy)
+        }
+        await sleep(250)
+    }
+}
+
+const danmaku3 = async () => {
+    for (let k = 0; k < 3; k++) {
+        const angle = k * Math.PI /3 
+        for (let i = 0; i < 20; i++) {
+            for (let j = 0; j < 16; j++) {
+                const dx = Math.cos(angle + j * Math.PI / 8) * bulletSpeed
+                const dy = Math.sin(angle + j * Math.PI / 8) * bulletSpeed
+                createBullet(dx, dy)
+            }
+            await sleep(50)
+        }
+        await sleep(100)
+    }
+}
 // なんか関数型言語っぽくてくさ
 // なぜかこれを中括弧で括るのはダメらしい（duration の後ろの new Promise を括るのがダメ
 // 多分理由は深遠すぎて今の僕には理解できない
-const sleep = (duration) =>  new Promise(r => setTimeout(r, duration)) 
+const sleep = (duration) => new Promise(r => setTimeout(r, duration))
 
 // 後からどんどん作っていくものは，こんな感じに関数かしておく
 // Hero とか container は作るのは最初だけなので必要ない
@@ -40,7 +98,7 @@ const createBullet = (dx, dy) => {
     // top left はどうせ後から update するので書く必要はないとのこと
     element.style.backgroundColor = '#fff'
     element.style.borderRadius = '50%'
-    bulletList.push({ x: bulletFromX, y: bulletFromY, dx, dy, element, availlable:true })
+    bulletList.push({ x: bulletFromX, y: bulletFromY, dx, dy, element, availlable: true })
     // borderRadius 以外は自分でかいた, appendChild も忘れていた
     // ここからは，Bullet を生成すればいいんだけど，何をすればいいのか
     // 普通に sleep すればいいのか？？
@@ -54,7 +112,7 @@ const createBullet = (dx, dy) => {
 // ゲームならば，オブジェクト指向が一番マッチしているような気もしなくもないんだけど
 const updateBullet = () => {
     for (const bullet of bulletList) {
-        console.log((bullet.x - heroX)**2 + (bullet.y - heroY)**2);
+        console.log((bullet.x - heroX) ** 2 + (bullet.y - heroY) ** 2);
         //console.log(bullet, bullet.element);
         // これは最初に出してしまうのがいいのか，ただそれをすると元のオブジェクトが書き変わらないんじゃないかという心配がある
         // これは atcoder をやってる時にも不安になる，だからポインタや参照の仕組みをもうちょっとかっちり理解した方がいい気がする
@@ -62,8 +120,10 @@ const updateBullet = () => {
         // ここの top, left が謎に反映されなくてなぞ，マジでなんで？
         // style が抜けててアホ，というか，辞書は普通に展開して取り出していた
         // 辞書の展開取り出しは，中括弧でやれば良い模様
-        bullet.element.style.top = `${bullet.y-bulletSize/2}px`
-        bullet.element.style.left = `${bullet.x-bulletSize/2}px`
+        bullet.element.style.top = `${bullet.y - bulletSize / 2}px`
+        bullet.element.style.left = `${bullet.x - bulletSize / 2}px`
+        // ここの，表示の bulletSize/2 で引くのは，入れておかないと当たり判定がゴミカスになるので注意
+        // Hero の方も同様（1敗)
         bullet.x += bullet.dx
         bullet.y += bullet.dy
         // bullet を消す処理は後でいいだろうか？そんな難しくもないか
@@ -71,12 +131,12 @@ const updateBullet = () => {
         // 前回はオブジェクト指向だったので簡単だったけど，今回は多少めんどくさいかもしれない
         // 当たり判定をどこに書いているかを忘れてしまった
         // とりあえず，画面から消えてるか消えていないかのしょりだな
-        if (bullet.x < 0 || bullet.x > width || bullet.y < 0 || bullet.y > width){
+        if (bullet.x < 0 || bullet.x > width || bullet.y < 0 || bullet.y > height) {
             bullet.availlable = false
             bullet.element.remove()
         }
 
-        if ((bullet.x - heroX)**2 + (bullet.y - heroY)**2 < (bulletSize)**2){
+        if ((bullet.x - heroX) ** 2 + (bullet.y - heroY) ** 2 < (bulletSize) ** 2) {
             gameOver = true
         }
     }
@@ -101,10 +161,9 @@ const removeBullet = () => {
 */
 
 
-
 const updateHero = () => {
-    heroElement.style.top = `${heroY-heroSize/2}px`
-    heroElement.style.left = `${heroX-heroSize/2}px`
+    heroElement.style.top = `${heroY - heroSize / 2}px`
+    heroElement.style.left = `${heroX - heroSize / 2}px`
 }
 
 const init = () => {
@@ -154,6 +213,7 @@ const init = () => {
         originalY = e.pageY
         originalHeroX = heroX
         originalHeroY = heroY
+        gameStart = true
         //console.log(heroX, heroY);
     }
     // 別にこれでも問題はなさそうなもんだけど，画面外から入ってきたときに瞬間移動するのが気に入らんので
@@ -161,7 +221,17 @@ const init = () => {
     // いつか，コントローラーで操作できるようになどしてみたい気分
     document.onpointermove = (e) => {
         e.preventDefault()
-        if (gameOver){
+        // ここの gameover の処理がこれでいいのかよくないのかよくわからない
+        // t-kihira は最初からこれを想定していたのか
+        // 普通に考えて，ひよこが変な位置に移動してしまいそうなもんなんだけど，
+        // その頃には updateBullet を抜け出しているから問題がないのかな
+        // updateBullet に当たり判定やら，gameover の処理やらが全て包まってしまっているので，
+        // 後でリファクタリングしづらいクソコードになってる気がする
+        // その辺は，本に載っているような，きちんと設計されたコードの真似をすることによ理，
+        // リファクタリングしやすいコードの手本はわかるんじゃないかと思ってる
+        // とゆーことで，あとは弾幕を作る処理を書くだけ，なんだが，
+        // あんまり作りすぎると激オモになるので，その辺にどうやって対処するのかが結構気になる
+        if (gameOver) {
             originalX = -1
         }
         if (originalX !== -1) {
@@ -194,8 +264,10 @@ const init = () => {
 
 window.onload = async () => {
     init()
-    createBullet(0, 5)
-    while(!gameOver) {
+    // この関数をわけわからん async で扱ってるんだが，訳がわからなすぎて発狂しそう
+    // 下の while 文に入っても勝手に回り続けてるのが普通にやばい
+    bulletManager()
+    while (!gameOver) {
         updateBullet()
         await sleep(16)
     }
