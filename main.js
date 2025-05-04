@@ -15,6 +15,8 @@ let bulletFromX = width / 2
 let bulletFromY = 10
 let bulletList = []
 
+let gameOver = false
+
 // なんか関数型言語っぽくてくさ
 // なぜかこれを中括弧で括るのはダメらしい（duration の後ろの new Promise を括るのがダメ
 // 多分理由は深遠すぎて今の僕には理解できない
@@ -31,6 +33,9 @@ const createBullet = (dx, dy) => {
     element.style.position = 'absolute'
     element.style.width = `${bulletSize}px`
     element.style.height = `${bulletSize}px`
+    element.style.display = 'flex'
+    element.style.justifyContent = 'center'
+    element.style.alignItems = 'center'
     // この radius の指定方法がよくわからん，50% ならば半円？って感じもしなくもない
     // top left はどうせ後から update するので書く必要はないとのこと
     element.style.backgroundColor = '#fff'
@@ -49,7 +54,8 @@ const createBullet = (dx, dy) => {
 // ゲームならば，オブジェクト指向が一番マッチしているような気もしなくもないんだけど
 const updateBullet = () => {
     for (const bullet of bulletList) {
-        console.log(bullet, bullet.element);
+        console.log((bullet.x - heroX)**2 + (bullet.y - heroY)**2);
+        //console.log(bullet, bullet.element);
         // これは最初に出してしまうのがいいのか，ただそれをすると元のオブジェクトが書き変わらないんじゃないかという心配がある
         // これは atcoder をやってる時にも不安になる，だからポインタや参照の仕組みをもうちょっとかっちり理解した方がいい気がする
         // linux のしくみの本で，ある程度 os の動きを探るようなプログラムを書けば勉強になると思うのでやってみよう
@@ -68,6 +74,10 @@ const updateBullet = () => {
         if (bullet.x < 0 || bullet.x > width || bullet.y < 0 || bullet.y > width){
             bullet.availlable = false
             bullet.element.remove()
+        }
+
+        if ((bullet.x - heroX)**2 + (bullet.y - heroY)**2 < heroSize){
+            gameOver = true
         }
     }
     // これだけでは，element が消えない？？
@@ -98,7 +108,7 @@ const updateHero = () => {
 }
 
 const init = () => {
-    console.log(heroX, heroY);
+    //console.log(heroX, heroY);
     container = document.createElement('div')
     container.style.position = 'absolute'
     container.style.width = `${width}px`
@@ -111,12 +121,12 @@ const init = () => {
     heroElement.style.width = `${heroSize}px`
     heroElement.style.height = `${heroSize}px`
     heroElement.style.display = 'flex'
-    heroElement.style.justifyContent = 'center'
     heroElement.style.alignItems = 'center'
+    heroElement.style.justifyContent = 'center'
     heroElement.textContent = '🐥'
     heroElement.style.color = '#f00'
     updateHero()
-    console.log(heroX, heroY);
+    //console.log(heroX, heroY);
     //heroElement.style.fontSize = '30px'
     // size に準じた方が良さげ
     heroElement.style.fontSize = `${heroSize * 0.8}px`
@@ -144,7 +154,7 @@ const init = () => {
         originalY = e.pageY
         originalHeroX = heroX
         originalHeroY = heroY
-        console.log(heroX, heroY);
+        //console.log(heroX, heroY);
     }
     // 別にこれでも問題はなさそうなもんだけど，画面外から入ってきたときに瞬間移動するのが気に入らんので
     // original とかはとっておくことにしよう
@@ -154,7 +164,7 @@ const init = () => {
         if (originalX !== -1) {
             heroX = originalHeroX + (e.pageX - originalX) * 1.5
             heroY = originalHeroY + (e.pageY - originalY) * 1.5
-            console.log('hero', e.pageX, e.pageY, originalX, originalY, originalHeroX, originalHeroY, heroX, heroY);
+            //console.log('hero', e.pageX, e.pageY, originalX, originalY, originalHeroX, originalHeroY, heroX, heroY);
 
             // 画面外に出ない処理，いい感じだ
             // 他のプログラムでも，こういう門番的なのを綺麗に書いていきたいね
@@ -182,8 +192,9 @@ const init = () => {
 window.onload = async () => {
     init()
     createBullet(0, 5)
-    for (let i = 0; i < 1000; i++) {
+    while(!gameOver) {
         updateBullet()
         await sleep(16)
     }
+    console.log('gameover');
 }
